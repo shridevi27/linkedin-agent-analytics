@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Create safe CI test data
+        run: |
+          mkdir -p data/raw
+          printf '%s\n' \
+          'Name,Job Title,Company,Industry,Location,Agent,SDR Status,Comment Status,Hot Score,Source,Prioritized,LinkedIn URL,Added On,Last Contacted,Invite Sent At,Connected At' \
+          'CI Lead,,,,Test Location,CI Agent,replied,,,CI,No,https://example.com/ci,2026-08-20,2026-08-20,,' \
+          > data/raw/ci_leads.csv
+
+      - name: Run pipeline twice to prove idempotency
+        run: |
+          python src/pipeline.py
+          python src/pipeline.py
+
+      - name: Run tests
+        run: pytest
